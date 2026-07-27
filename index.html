@@ -260,47 +260,114 @@
   const stage = document.getElementById('stage');
 
   function dodge(e) {
-    if (answered) return;
-    dodgeCount++;
+  if (answered) return;
+  dodgeCount++;
 
-    const stageRect = stage.getBoundingClientRect();
-    const rect = noBtn.getBoundingClientRect();
-    const btnWidth = rect.width;
-    const btnHeight = rect.height;
-    const margin = 16;
+  const stageRect = stage.getBoundingClientRect();
+  const rect = noBtn.getBoundingClientRect();
+  const btnWidth = rect.width;
+  const btnHeight = rect.height;
+  const margin = 20;
 
-    // convert button position into stage-local coordinates
-    let localLeft = rect.left - stageRect.left;
-    let localTop = rect.top - stageRect.top;
+  let localLeft = rect.left - stageRect.left;
+  let localTop = rect.top - stageRect.top;
 
-    if (!noBtn.classList.contains('escaping')) {
-      // reparent into stage so its containing block matches the coordinates we compute
-      // (previously it stayed inside .card, which is also position:relative — mismatch!)
-      stage.appendChild(noBtn);
-      noBtn.style.left = localLeft + 'px';
-      noBtn.style.top = localTop + 'px';
-      noBtn.classList.add('escaping');
+  if (!noBtn.classList.contains('escaping')) {
+    stage.appendChild(noBtn);
+    noBtn.style.position = 'absolute';
+    noBtn.style.left = localLeft + 'px';
+    noBtn.style.top = localTop + 'px';
+    noBtn.classList.add('escaping');
+  }
+
+  const centerX = localLeft + btnWidth / 2;
+  const centerY = localTop + btnHeight / 2;
+
+  let pointerX = centerX, pointerY = centerY;
+  if (e) {
+    let clientX, clientY;
+    if (e.touches && e.touches[0]) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if (typeof e.clientX === 'number') {
+      clientX = e.clientX;
+      clientY = e.clientY;
     }
-
-    const centerX = localLeft + btnWidth / 2;
-    const centerY = localTop + btnHeight / 2;
-
-    // pointer position, also converted to stage-local coordinates
-    let pointerX = centerX, pointerY = centerY;
-    if (e) {
-      let clientX, clientY;
-      if (e.touches && e.touches[0]) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-      } else if (typeof e.clientX === 'number') {
-        clientX = e.clientX;
-        clientY = e.clientY;
-      }
-      if (typeof clientX === 'number') {
-        pointerX = clientX - stageRect.left;
-        pointerY = clientY - stageRect.top;
-      }
+    if (typeof clientX === 'number') {
+      pointerX = clientX - stageRect.left;
+      pointerY = clientY - stageRect.top;
     }
+  }
+
+  let angle = Math.atan2(centerY - pointerY, centerX - pointerX);
+  angle += (Math.random() - 0.5) * (Math.PI / 1.6);
+
+  const distance = 70 + Math.random() * 90;
+
+  let newX = localLeft + Math.cos(angle) * distance;
+  let newY = localTop + Math.sin(angle) * distance;
+
+  // Правильные границы
+  const maxX = stageRect.width - btnWidth - margin;
+  const maxY = stageRect.height - btnHeight - margin;
+
+  newX = Math.max(margin, Math.min(newX, maxX));
+  newY = Math.max(margin, Math.min(newY, maxY));
+
+  noBtn.style.left = newX + 'px';
+  noBtn.style.top = newY + 'px';
+
+  if (dodgeCount === 3) {
+    hint.classList.add('show');
+  }
+
+  const growth = Math.min(dodgeCount, 6);
+  yesBtn.style.transform = `scale(${1 + growth * 0.035})`;
+  if (growth >= 6) yesBtn.classList.add('grown');
+}
+
+  // function dodge(e) {
+  //   if (answered) return;
+  //   dodgeCount++;
+
+  //   const stageRect = stage.getBoundingClientRect();
+  //   const rect = noBtn.getBoundingClientRect();
+  //   const btnWidth = rect.width;
+  //   const btnHeight = rect.height;
+  //   const margin = 16;
+
+  //   // convert button position into stage-local coordinates
+  //   let localLeft = rect.left - stageRect.left;
+  //   let localTop = rect.top - stageRect.top;
+
+  //   if (!noBtn.classList.contains('escaping')) {
+  //     // reparent into stage so its containing block matches the coordinates we compute
+  //     // (previously it stayed inside .card, which is also position:relative — mismatch!)
+  //     stage.appendChild(noBtn);
+  //     noBtn.style.left = localLeft + 'px';
+  //     noBtn.style.top = localTop + 'px';
+  //     noBtn.classList.add('escaping');
+  //   }
+
+  //   const centerX = localLeft + btnWidth / 2;
+  //   const centerY = localTop + btnHeight / 2;
+
+  //   // pointer position, also converted to stage-local coordinates
+  //   let pointerX = centerX, pointerY = centerY;
+  //   if (e) {
+  //     let clientX, clientY;
+  //     if (e.touches && e.touches[0]) {
+  //       clientX = e.touches[0].clientX;
+  //       clientY = e.touches[0].clientY;
+  //     } else if (typeof e.clientX === 'number') {
+  //       clientX = e.clientX;
+  //       clientY = e.clientY;
+  //     }
+  //     if (typeof clientX === 'number') {
+  //       pointerX = clientX - stageRect.left;
+  //       pointerY = clientY - stageRect.top;
+  //     }
+  //   }
 
     // base direction: away from the pointer, plus random jitter so it's never the same move twice
     let angle = Math.atan2(centerY - pointerY, centerX - pointerX);
